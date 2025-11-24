@@ -181,14 +181,14 @@
 
         #items-list {
             list-style: none;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 10px; /* For scrollbar */
         }
 
         #items-list li {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
             padding: 10px;
             background-color: var(--secondary-color);
@@ -197,82 +197,35 @@
             font-size: 1rem;
         }
 
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fff;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .item-text-input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: 2px solid var(--bg-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
         .remove-btn {
             background: none;
             border: none;
             color: #ff7b7b;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: color 0.2s;
+            padding: 0 8px;
         }
         .remove-btn:hover {
             color: var(--accent-color);
-        }
-
-        /* --- Winner Modal --- */
-        #result-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.4s, visibility 0.4s;
-        }
-
-        #result-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .result-content {
-            background: var(--primary-color);
-            padding: 40px 60px;
-            border-radius: 20px;
-            text-align: center;
-            border: 3px solid var(--pointer-color);
-            box-shadow: 0 0 50px var(--pointer-color);
-            transform: scale(0.7);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        #result-modal.show .result-content {
-            transform: scale(1);
-        }
-
-        .result-content p {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: var(--text-color);
-        }
-
-        #winner-text {
-            font-family: 'Luckiest Guy', cursive;
-            font-size: 4rem;
-            color: var(--pointer-color);
-            text-shadow: 3px 3px 8px var(--shadow-color);
-            margin-bottom: 30px;
-        }
-
-        #close-modal-btn {
-            font-family: 'Luckiest Guy', cursive;
-            font-size: 1.5rem;
-            padding: 10px 30px;
-            border-radius: 30px;
-            border: none;
-            background-color: var(--accent-color);
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #close-modal-btn:hover {
-            background-color: #c33a50;
         }
 
         /* Scrollbar styling */
@@ -309,20 +262,8 @@
 
     </div>
 
-    <!-- Winner Announcement Modal -->
-    <div id="result-modal">
-        <div class="result-content">
-            <p>The winner is...</p>
-            <h2 id="winner-text"></h2>
-            <button id="close-modal-btn">Play Again</button>
-        </div>
-    </div>
-
-
     <script>
         // --- Data & State ---
-        // This is the "dictionary" you can edit.
-        // It's an array of objects, where each object is a segment on the wheel.
         let segments = [
             { text: 'Prize 1', color: '#f82' },
             { text: 'Try Again', color: '#0bf' },
@@ -332,7 +273,6 @@
             { text: 'Free Spin', color: '#f0b' },
         ];
 
-        // A nice color palette for new items. It will cycle through these.
         const colorPalette = [
             '#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
             '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4', 
@@ -349,20 +289,12 @@
         const itemInput = document.getElementById('item-input');
         const addBtn = document.getElementById('add-btn');
         const itemsList = document.getElementById('items-list');
-        const resultModal = document.getElementById('result-modal');
-        const winnerText = document.getElementById('winner-text');
-        const closeModalBtn = document.getElementById('close-modal-btn');
         const ctx = wheelCanvas.getContext('2d');
 
         // --- Audio ---
-        // Using Data URIs to keep everything in one file.
-        const spinSound = new Audio('data:audio/mp3;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'+Array(1e3).join('123')); // Placeholder for a real ticking sound
-        const winSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSwgBAAAAAgAAAA='); // Placeholder for a real win sound
-        // Note: Real sounds would have much longer base64 strings. These are silent placeholders.
-        // For actual sounds, you can convert a small mp3/wav file to a base64 string online.
+        const spinSound = new Audio('data:audio/mp3;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'+Array(1e3).join('123'));
         spinSound.loop = true;
         spinSound.volume = 0.2;
-
 
         // --- Core Functions ---
 
@@ -372,7 +304,6 @@
         const drawWheel = () => {
             const numSegments = segments.length;
             if (numSegments === 0) {
-                // Draw an empty wheel if no segments
                 ctx.clearRect(0, 0, 400, 400);
                 ctx.beginPath();
                 ctx.arc(200, 200, 190, 0, 2 * Math.PI);
@@ -388,11 +319,10 @@
             }
             spinBtn.disabled = false;
 
-
             const anglePerSegment = (2 * Math.PI) / numSegments;
             const centerX = wheelCanvas.width / 2;
             const centerY = wheelCanvas.height / 2;
-            const radius = centerX - 10; // Leave a small margin
+            const radius = centerX - 10;
 
             ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
             ctx.font = 'bold 16px Arial';
@@ -424,7 +354,6 @@
                 );
                 ctx.rotate(textAngle + Math.PI / 2);
                 
-                // Truncate text if too long
                 const maxTextWidth = radius * 0.5;
                 let text = segment.text;
                 if (ctx.measureText(text).width > maxTextWidth) {
@@ -446,10 +375,7 @@
             isSpinning = true;
             spinBtn.disabled = true;
             
-            // Random spin duration between 5 and 7 seconds
             const spinDuration = Math.random() * 2000 + 5000; 
-            
-            // Random number of full rotations (e.g., 5 to 10) plus a random final angle
             const randomRotations = Math.floor(Math.random() * 5) + 5;
             const randomFinalAngle = Math.random() * 360;
             const totalRotation = (randomRotations * 360) + randomFinalAngle;
@@ -466,36 +392,7 @@
                 isSpinning = false;
                 spinBtn.disabled = false;
                 spinSound.pause();
-                
-                // const winner = getWinner();
-                // showWinner(winner.text);
             }, spinDuration);
-        };
-
-        const getWinner = () => {
-            const numSegments = segments.length;
-            const anglePerSegment = 360 / numSegments;
-            
-            // Normalize the rotation to be within 0-360 degrees
-            const finalAngle = currentRotation % 360;
-            
-            // The pointer is at the top (0 degrees), pointing down
-            // We need to find which segment is at the top
-            // Add half a segment to align with the center of the segment
-            const adjustedAngle = (finalAngle + anglePerSegment / 2) % 360;
-            const winningSegmentIndex = Math.floor(adjustedAngle / anglePerSegment) % numSegments;
-            
-            return segments[winningSegmentIndex];
-        };
-
-        /**
-         * Displays the winner in a modal.
-         */
-        const showWinner = (winnerTextContent) => {
-            winnerText.textContent = winnerTextContent;
-            resultModal.classList.add('show');
-            winSound.currentTime = 0;
-            winSound.play();
         };
 
         /**
@@ -506,25 +403,33 @@
             segments.forEach((segment, index) => {
                 const li = document.createElement('li');
                 
-                const colorBox = document.createElement('span');
-                colorBox.style.display = 'inline-block';
-                colorBox.style.width = '20px';
-                colorBox.style.height = '20px';
-                colorBox.style.backgroundColor = segment.color;
-                colorBox.style.borderRadius = '4px';
-                colorBox.style.marginRight = '10px';
+                const colorPicker = document.createElement('input');
+                colorPicker.type = 'color';
+                colorPicker.value = segment.color;
+                colorPicker.className = 'color-picker';
+                colorPicker.addEventListener('input', (e) => {
+                    segments[index].color = e.target.value;
+                    drawWheel();
+                });
 
-                const textSpan = document.createElement('span');
-                textSpan.textContent = segment.text;
-                textSpan.style.flexGrow = '1';
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = segment.text;
+                textInput.className = 'item-text-input';
+                textInput.addEventListener('input', (e) => {
+                    segments[index].text = e.target.value;
+                    drawWheel();
+                });
                 
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-btn';
                 removeBtn.innerHTML = '&times;';
-                removeBtn.dataset.index = index;
+                removeBtn.addEventListener('click', () => {
+                    removeSegment(index);
+                });
 
-                li.appendChild(colorBox);
-                li.appendChild(textSpan);
+                li.appendChild(colorPicker);
+                li.appendChild(textInput);
                 li.appendChild(removeBtn);
                 itemsList.appendChild(li);
             });
@@ -553,7 +458,6 @@
             drawWheel();
         };
 
-
         // --- Event Listeners ---
         spinBtn.addEventListener('click', spin);
         
@@ -563,24 +467,6 @@
                 addSegment();
             }
         });
-
-        itemsList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-btn')) {
-                const index = e.target.dataset.index;
-                removeSegment(index);
-            }
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            resultModal.classList.remove('show');
-        });
-        
-        resultModal.addEventListener('click', (e) => {
-            if (e.target === resultModal) {
-                 resultModal.classList.remove('show');
-            }
-        });
-
 
         // --- Initial Setup ---
         const init = () => {
