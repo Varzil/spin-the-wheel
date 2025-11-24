@@ -482,8 +482,11 @@
             // Normalize the rotation to be within 0-360 degrees
             const finalAngle = currentRotation % 360;
             
-            // The pointer is at the top (0 degrees), so we need to adjust
-            const winningSegmentIndex = Math.floor((360 - finalAngle) / anglePerSegment) % numSegments;
+            // The pointer is at the top (0 degrees), pointing down
+            // We need to find which segment is at the top
+            // Add half a segment to align with the center of the segment
+            const adjustedAngle = (finalAngle + anglePerSegment / 2) % 360;
+            const winningSegmentIndex = Math.floor(adjustedAngle / anglePerSegment) % numSegments;
             
             return segments[winningSegmentIndex];
         };
